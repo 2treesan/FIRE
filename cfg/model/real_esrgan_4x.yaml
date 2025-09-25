@@ -1,0 +1,7 @@
+_target_: src.model.real_esrgan.RealESRGAN
+scale: 4  # upscaling factor
+in_ch: 3
+out_ch: 3
+nf: 64    # number of features
+nb: 23    # number of RRDB blocks
+gc: 32    # growth channel in RDB

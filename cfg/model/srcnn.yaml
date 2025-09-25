@@ -1,0 +1,5 @@
+_target_: src.model.srcnn.SRCNN
+in_ch: 3
+out_ch: 3
+n1: 64  # filters in patch extraction layer
+n2: 32  # filters in non-linear mapping layer
