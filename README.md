@@ -74,6 +74,35 @@ x = torch.randn(1, 3, 64, 64)  # Low-resolution input
 y = model(x)  # High-resolution output (1, 3, 256, 256) for 4x upscaling
 ```
 
+## Model Benchmarking
+
+Run the included benchmark script to compare all models:
+
+```bash
+python benchmark_models.py
+```
+
+This will test all models and provide detailed performance metrics including:
+- Parameter count
+- Inference time and FPS
+- Memory usage (on GPU)
+- Recommendations for different use cases
+
+### Benchmark Results (CPU)
+
+| Model | Parameters | Time (ms) | FPS | Best For |
+|-------|------------|-----------|-----|----------|
+| **edsr_lite** | 890K | 56.2 | 17.8 | Image restoration (1x) |
+| **edsr_small** | 927K | 85.4 | 11.7 | Fast super-resolution |
+| **swinir_small** | 736K | 144.8 | 6.9 | Compact transformer |
+| **real_esrgan_small** | 1.5M | 120.3 | 8.3 | Real-world images |
+| **swinir_medium** | 3.3M | 394.9 | 2.5 | Transformer quality |
+| **edsr_medium** | 6.1M | 395.7 | 2.5 | Balanced performance |
+| **real_esrgan_medium** | 6.6M | 449.6 | 2.2 | Real-world quality |
+| **swinir_large** | 10.1M | 945.8 | 1.1 | Best transformer |
+| **real_esrgan_large** | 16.7M | 916.8 | 1.1 | Best real-world |
+| **edsr_large** | 43.1M | 2328.9 | 0.4 | Maximum quality |
+
 ## Available Models
 
 ### Image Restoration (1x)
