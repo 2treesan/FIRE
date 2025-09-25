@@ -1,0 +1,2 @@
+_target_: src.model.swinir_simple.SwinIRSimpleSmall
+upscale: 4
