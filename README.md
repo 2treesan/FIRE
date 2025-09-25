@@ -42,4 +42,30 @@ python main.py \
 
 ## Available Models
 
-- **EDSRLite**: A lightweight version of the Enhanced Deep Super-Resolution network, optimized for faster performance while maintaining high-quality results.
+### Restoration Models (Same Resolution I/O)
+- **EDSRLite** (`edsr_lite`): A lightweight version of the Enhanced Deep Super-Resolution network, optimized for image restoration tasks.
+
+### Classic Super-Resolution Models  
+- **SRCNN** (`srcnn`): The pioneering deep learning model for super-resolution. Simple 3-layer CNN architecture.
+- **SRCNN++** (`srcnn_plus`): Enhanced SRCNN with deeper architecture and optional residual connections.
+
+### EDSR Family (True Super-Resolution with Upscaling)
+- **EDSR** (`edsr_2x`, `edsr_4x`): Enhanced Deep Super-Resolution network with 2x or 4x upscaling capability.
+- **EDSR Large** (`edsr_large_4x`): Large version of EDSR with 256 features and 32 residual blocks for maximum quality.
+- **EDSR Baseline** (`edsr_baseline`): EDSR variant with batch normalization for comparison studies.
+
+### Real-World Super-Resolution Models
+- **Real-ESRGAN** (`real_esrgan_4x`): State-of-the-art model for practical super-resolution, designed to handle real-world degraded images.
+- **Real-ESRGAN Light** (`real_esrgan_light_4x`): Lightweight version of Real-ESRGAN optimized for faster inference.
+
+### Model Specifications
+
+| Model | Parameters | Upscaling | Best Use Case |
+|-------|------------|-----------|---------------|
+| EDSRLite | ~20K | 1x (restoration) | Fast image denoising/restoration |
+| SRCNN | ~20K | 1x (bicubic pre-upsampled) | Learning/research baseline |
+| SRCNN++ | ~40K | 1x (bicubic pre-upsampled) | Enhanced baseline with residuals |
+| EDSR 2x/4x | ~1.4M/1.5M | 2x/4x | High-quality upscaling |
+| EDSR Large | ~43M | 4x | Maximum quality upscaling |
+| Real-ESRGAN | ~17M | 4x | Real-world degraded images |
+| Real-ESRGAN Light | ~2.3M | 4x | Fast real-world upscaling |

@@ -1,0 +1,7 @@
+_target_: src.model.real_esrgan.RealESRGANLight
+scale: 4  # upscaling factor
+in_ch: 3
+out_ch: 3
+nf: 32    # number of features (lightweight)
+nb: 12    # number of RRDB blocks (lightweight)
+gc: 16    # growth channel in RDB (lightweight)
