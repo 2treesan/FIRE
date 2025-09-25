@@ -1,0 +1,4 @@
+_target_: src.model.real_esrgan.RealESRGANLarge
+scale: 4
+num_in_ch: 3
+num_out_ch: 3

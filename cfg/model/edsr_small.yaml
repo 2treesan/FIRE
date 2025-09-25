@@ -1,0 +1,3 @@
+_target_: src.model.edsr.EDSRSmall
+scale: 4
+n_colors: 3
