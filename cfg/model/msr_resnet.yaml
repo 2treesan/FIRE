@@ -1,0 +1,7 @@
+_target_: src.model.msr_resnet.MSRResNet
+in_ch: 3
+out_ch: 3
+nf: 64
+nb: 16   # tương đương EDSR-Lite 12 block
+scale: 2
+# upscale_mode: "pixelshuffle"
