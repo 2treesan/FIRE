@@ -2,7 +2,7 @@
 from typing import Tuple, List, Sequence, Optional
 from glob import glob
 import os, random
-from PIL import Image
+from PIL import Image, ImageFilter
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 from .augment import build_pipeline as build_aug
@@ -18,6 +18,7 @@ def _mod_crop(img: Image.Image, scale: int) -> Image.Image:
 
 def _hr2lr(hr: Image.Image, scale: int) -> Image.Image:
     w, h = hr.size
+    hr = hr.filter(ImageFilter.GaussianBlur(radius= 8 / scale))
     return hr.resize((w // scale, h // scale), resample=_bicubic())
 
 class _HROnlyDataset(Dataset):

@@ -1,10 +1,10 @@
 _target_: src.loader.default.DefaultLoader
-hr_dir: data
+hr_dir: "data"
 split: [0.8, 0.1, 0.1]
 batch_size: 16
 num_workers: 4
 seed: ${seed}
 exts: [".png", ".jpg", ".jpeg"]
 augment: ["fliprot", "degrade_std", "pair_enhance"]
-scale: 2
+scale: 4
 patch_size: 256

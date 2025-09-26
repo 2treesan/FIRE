@@ -20,7 +20,7 @@ def main(cfg: DictConfig):
             break
 
     # 2) Model
-    model = instantiate(cfg.model)
+    model = instantiate(cfg.model, scale=loader.scale)
 
     if cfg.verbose:
         print(f"[2] Model successfully built.")
