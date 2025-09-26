@@ -15,6 +15,9 @@ def main(cfg: DictConfig):
     if cfg.verbose:
         print(f"[1] Data successfully loaded.")
         print(f"Train: {len(train_loader.dataset)} | Val: {len(val_loader.dataset)} | Test: {len(test_loader.dataset)}")
+        for lr, hr in train_loader:
+            print(f"LR: {lr.shape} | HR: {hr.shape}")
+            break
 
     # 2) Model
     model = instantiate(cfg.model)

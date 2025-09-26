@@ -1,6 +1,6 @@
 # src/loader/augment.py
 from typing import List, Tuple, Protocol
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, ImageEnhance
 import random, io, numpy as np
 
 class Aug(Protocol):
@@ -13,26 +13,7 @@ class Compose:
         for op in self.ops:
             lr, hr = op(lr, hr)
         return lr, hr
-
-class Crop:
-    def __init__(self, patch_size: int) -> None:
-        self.ps = patch_size
-    def __call__(self, lr, hr):
-        if self.ps <= 0 or self.ps >= min(*lr.size): return lr, hr
-        w, h = lr.size
-        x = random.randint(0, w - self.ps); y = random.randint(0, h - self.ps)
-        box = (x, y, x + self.ps, y + self.ps)
-        return lr.crop(box), hr.crop(box)
-
-class CenterCrop:
-    def __init__(self, patch_size: int) -> None:
-        self.ps = patch_size
-    def __call__(self, lr, hr):
-        if self.ps <= 0 or self.ps >= min(*lr.size): return lr, hr
-        w,h = lr.size; x=(w-self.ps)//2; y=(h-self.ps)//2
-        box=(x,y,x+self.ps,y+self.ps)
-        return lr.crop(box), hr.crop(box)
-
+        
 class FlipRot:
     def __init__(self) -> None:
         # dùng mã hoá op thay vì lambda để picklable
@@ -78,18 +59,52 @@ class CutBlur:
         else:
             ha[cy:cy+ch, cx:cx+cw] = la[cy:cy+ch, cx:cx+cw]
         return Image.fromarray(la), Image.fromarray(ha)
+class PairEnhance:
+    """
+    Apply the same color/contrast/brightness/sharpness adjustments to both LR and HR.
+    Safe when LR and HR have different sizes (no spatial mixing).
+    """
+    def __init__(self,
+                 p: float = 0.8,
+                 brightness: Tuple[float, float] = (0.9, 1.1),
+                 contrast: Tuple[float, float] = (0.9, 1.1),
+                 saturation: Tuple[float, float] = (0.9, 1.1),
+                 sharpness: Tuple[float, float] = (0.9, 1.1)) -> None:
+        self.p = float(p)
+        self.brightness = brightness
+        self.contrast = contrast
+        self.saturation = saturation
+        self.sharpness = sharpness
+
+    def _rand(self, rng: Tuple[float, float]) -> float:
+        if rng is None:
+            return 1.0
+        a, b = rng
+        if a == 1.0 and b == 1.0:
+            return 1.0
+        return random.uniform(a, b)
+
+    def _apply_factors(self, im: Image.Image, b: float, c: float, s: float, sh: float) -> Image.Image:
+        out = ImageEnhance.Brightness(im).enhance(b)
+        out = ImageEnhance.Contrast(out).enhance(c)
+        out = ImageEnhance.Color(out).enhance(s)
+        out = ImageEnhance.Sharpness(out).enhance(sh)
+        return out
+
+    def __call__(self, lr: Image.Image, hr: Image.Image) -> Tuple[Image.Image, Image.Image]:
+        if random.random() > self.p:
+            return lr, hr
+        b = self._rand(self.brightness)
+        c = self._rand(self.contrast)
+        s = self._rand(self.saturation)
+        sh = self._rand(self.sharpness)
+        return self._apply_factors(lr, b, c, s, sh), self._apply_factors(hr, b, c, s, sh)
 
 # PRESET REGISTRY 
 PRESETS = {
-    "nocrop":   Crop(0),
-    "crop64":   Crop(64),
-    "crop96":   Crop(96),
-    "crop128":  Crop(128),
-    "crop192":  Crop(192),
-    "centercrop128": CenterCrop(128),
     "fliprot":  FlipRot(),
     "degrade_std": DegradeStd(),
-    "cutblur":  CutBlur(0.5),
+    "pair_enhance": PairEnhance(),
 }
 
 def build_pipeline(names: List[str]) -> Compose:

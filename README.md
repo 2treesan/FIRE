@@ -31,13 +31,12 @@ pip install -r requirements.txt
 ```bash
 python main.py \
     loader.hr_dir="<path_to_hr>" \
-    loader.lr_dir="<path_to_lr>" \
     model="<model_name>" \
     trainer.epochs=100 \
     # Add other configurations as needed
 ```
 
-- Replace `<path_to_hr>` and `<path_to_lr>` with the paths to your high-resolution and low-resolution datasets respectively. Note that each HR image must have a corresponding LR image with the same name.
+- Replace `<path_to_hr>` with the path to your high-resolution images.
 - Replace `<model_name>` with the model defined in the `src/model` directory.
 
 ## Available Models

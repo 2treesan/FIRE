@@ -4,3 +4,10 @@ out_ch: 3
 nf: 64
 nb: 12
 res_scale: 0.1
+scale: 2
+# mode: pre_upsample | post_upsample
+mode: post_upsample
+# method depends on mode:
+#   pre_upsample:  learnable | bicubic
+#   post_upsample: deconvolution | pixelshuffle
+method: pixelshuffle

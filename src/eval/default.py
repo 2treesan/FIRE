@@ -7,10 +7,8 @@ import matplotlib.pyplot as plt
 from .postprocess import build_postprocess
 
 class DefaultEvaluator:
-    def __init__(self,
-                 loader,
-                 device: str = "cuda",
-                 postprocess: str = "identity",   # tên hậu xử lý
+    def __init__(self, loader, device: str = "cuda",
+                 postprocess: str = "identity",   # model đã LR->HR sẵn
                  n_samples_show: int = 4) -> None:
         self.loader = loader
         self.device = device

@@ -1,12 +1,10 @@
 _target_: src.loader.default.DefaultLoader
-hr_dir: data/hr
-lr_dir: data/lr
+hr_dir: data
 split: [0.8, 0.1, 0.1]
 batch_size: 16
 num_workers: 4
 seed: ${seed}
 exts: [".png", ".jpg", ".jpeg"]
-
-augment:
-  train: [crop128, fliprot, degrade_std, cutblur]
-  val: [centercrop128]
+augment: ["fliprot", "degrade_std", "pair_enhance"]
+scale: 2
+patch_size: 256
