@@ -1,0 +1,21 @@
+_target_: src.model.swinir.SwinIR
+img_size: 48      # LR patch size (192/4 = 48)
+patch_size: 1
+in_chans: 3
+embed_dim: 96     # Tối ưu cho RTX 3090
+depths: [6, 6, 6, 6]
+num_heads: [6, 6, 6, 6]
+window_size: 8    # Phù hợp với 48x48 patches
+mlp_ratio: 2.0
+qkv_bias: true
+qk_scale: null
+drop_rate: 0.0
+attn_drop_rate: 0.0
+drop_path_rate: 0.1
+
+ape: false
+patch_norm: true
+upscale: 4
+img_range: 1.0
+upsampler: "pixelshuffle"
+resi_connection: "1conv"

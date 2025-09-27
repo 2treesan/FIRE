@@ -7,3 +7,9 @@ opencv-python
 scipy
 scikit-learn
 seaborn
+hydra-core
+timm
+python-dotenv 
+wandb 
+tqdm
+pillow

@@ -1,0 +1,29 @@
+# @package _global_
+
+defaults:
+  - /model: swinir
+  - /loader: sr_loader
+  - /trainer: default
+  - /eval: default
+
+# Override any parameters here
+model:
+  upscale: 4
+  embed_dim: 96      # Tối ưu cho RTX 3090
+  depths: [6, 6, 6, 6]
+  num_heads: [6, 6, 6, 6]
+  img_size: 48       # LR patch size
+  window_size: 8
+
+trainer:
+  max_epochs: 100
+  lr: 2e-4           # Learning rate phù hợp
+  weight_decay: 1e-4
+  
+loader:
+  batch_size: 8      # Tối ưu cho RTX 3090 24GB
+  patch_size: 192    # HR patch size
+  scale: 4
+  
+# Add experiment-specific settings
+experiment_name: "swinir_x4_rtx3090"

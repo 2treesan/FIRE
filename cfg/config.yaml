@@ -1,10 +1,11 @@
 defaults:
   - _self_
-  - loader: default
-  - model: edsr_lite
-  - trainer: default
-  - eval: default
+  - loader: sr_loader        # file cfg/loader/sr_loader.yaml
+  - model: swinir            # file cfg/model/swinir.yaml
+  - trainer: sr_trainer         # file cfg/trainer/default.yaml
+  - eval: default            # file cfg/eval/default.yaml
 
+# Global parameters
 seed: 42
 device: cuda
-verbose: True
+verbose: true

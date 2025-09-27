@@ -1,0 +1,6 @@
+_target_: src.trainer.sr_trainer.build_sr_trainer
+lr: 2e-4
+weight_decay: 1e-4
+max_epochs: 100
+sample_every_n_epochs: 10
+num_samples: 4

@@ -1,6 +1,22 @@
-env/
-data/
+# Ignore checkpoints folder
+checkpoints/
+
+# Ignore wandb logs
+wandb/
+
+# Ignore experiment outputs
+exp/
+
+# Ignore environment variables file
+.env
+
+# Ignore Python cache files
 __pycache__/
-*.zip
-bin/
-outputs/
+*.pyc
+*.pyo
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore VSCode settings
+.vscode/

@@ -1,0 +1,10 @@
+_target_: src.loader.sr_loader.SRLoader
+hr_dir: "/workspace/kaggle_dataset/data"
+split: [0.8, 0.1, 0.1]  # train, val, test
+batch_size: 8
+num_workers: 4
+seed: 42
+exts: [".png", ".jpg", ".jpeg"]
+augment: ["fliprot", "degrade_std", "pair_enhance"]
+scale: 4
+patch_size: 192  # HR patch size sẽ tạo LR patch 48x48 (192/4)
