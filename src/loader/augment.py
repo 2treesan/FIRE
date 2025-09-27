@@ -1,5 +1,5 @@
 # src/loader/augment.py
-from typing import List, Tuple, Protocol
+from typing import List, Tuple, Protocol, Optional
 from PIL import Image, ImageFilter, ImageEnhance
 import random, io, numpy as np
 
@@ -27,6 +27,30 @@ class FlipRot:
         if code == "rot270": return im.rotate(270, expand=False)
         return im
     def __call__(self, lr, hr):
+        op = random.choice(self.ops)
+        return self._apply(lr, op), self._apply(hr, op)
+
+class FlipRot8:
+    """Full dihedral-8 set: rotations + flips + (TRANSPOSE/TRANSVERSE)."""
+    def __init__(self) -> None:
+        self.ops = [
+            "id", "fliph", "flipv",
+            "rot90", "rot180", "rot270",
+            "transpose", "transverse",
+        ]
+    def _apply(self, im: Image.Image, code: str) -> Image.Image:
+        if code == "id": return im
+        if code == "fliph":  return im.transpose(Image.FLIP_LEFT_RIGHT)
+        if code == "flipv":  return im.transpose(Image.FLIP_TOP_BOTTOM)
+        if code == "rot90":  return im.rotate(90, expand=False)
+        if code == "rot180": return im.rotate(180, expand=False)
+        if code == "rot270": return im.rotate(270, expand=False)
+        if hasattr(Image, "TRANSPOSE") and code == "transpose":
+            return im.transpose(Image.TRANSPOSE)
+        if hasattr(Image, "TRANSVERSE") and code == "transverse":
+            return im.transpose(Image.TRANSVERSE)
+        return im
+    def __call__(self, lr: Image.Image, hr: Image.Image):
         op = random.choice(self.ops)
         return self._apply(lr, op), self._apply(hr, op)
 
@@ -59,6 +83,103 @@ class CutBlur:
         else:
             ha[cy:cy+ch, cx:cx+cw] = la[cy:cy+ch, cx:cx+cw]
         return Image.fromarray(la), Image.fromarray(ha)
+
+def _bicubic():
+    return getattr(getattr(Image, "Resampling", Image), "BICUBIC")
+
+class LRDownUp:
+    """
+    Degrade LR by downscaling with a random factor and upscaling back to original size.
+    This simulates extra aliasing/interpolation artifacts. HR is untouched.
+    """
+    def __init__(self,
+                 p: float = 0.7,
+                 scale_range: Tuple[float, float] = (0.5, 0.95),
+                 resamples: Optional[List[int]] = None) -> None:
+        self.p = float(p)
+        self.scale_range = scale_range
+        # resampling methods to choose when upscaling back
+        if resamples is None:
+            self.resamples = [
+                getattr(getattr(Image, "Resampling", Image), "NEAREST"),
+                getattr(getattr(Image, "Resampling", Image), "BILINEAR"),
+                getattr(getattr(Image, "Resampling", Image), "BICUBIC"),
+            ]
+        else:
+            self.resamples = resamples
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        w, h = lr.size
+        r = random.uniform(*self.scale_range)
+        w2, h2 = max(1, int(round(w * r))), max(1, int(round(h * r)))
+        small = lr.resize((w2, h2), resample=_bicubic())
+        back = small.resize((w, h), resample=random.choice(self.resamples))
+        return back, hr
+
+class LRMotionBlur:
+    """Apply simple horizontal or vertical motion blur to LR only."""
+    def __init__(self, p: float = 0.5, ksize: Tuple[int, int] = (3, 15)) -> None:
+        self.p = float(p)
+        self.ksize = ksize
+    def _kernel(self, k: int, horizontal: bool) -> ImageFilter.Kernel:
+        k = max(3, int(k))
+        if k % 2 == 0: k += 1
+        arr = np.zeros((k, k), dtype=np.float32)
+        if horizontal:
+            arr[k//2, :] = 1.0
+        else:
+            arr[:, k//2] = 1.0
+        arr /= arr.sum()
+        return ImageFilter.Kernel((k, k), arr.flatten().tolist(), scale=1.0)
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        k = random.randint(self.ksize[0], self.ksize[1])
+        horiz = random.random() < 0.5
+        return lr.filter(self._kernel(k, horiz)), hr
+
+class LRUnsharp:
+    """Apply unsharp mask on LR to simulate halos/oversharpening."""
+    def __init__(self, p: float = 0.4,
+                 radius: Tuple[float, float] = (0.5, 2.5),
+                 percent: Tuple[int, int] = (50, 200),
+                 threshold: Tuple[int, int] = (0, 5)) -> None:
+        self.p = float(p)
+        self.radius = radius
+        self.percent = percent
+        self.threshold = threshold
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        return (
+            lr.filter(ImageFilter.UnsharpMask(
+                radius=random.uniform(*self.radius),
+                percent=random.randint(*self.percent),
+                threshold=random.randint(*self.threshold)
+            )),
+            hr,
+        )
+
+class LRWebP:
+    """Compress LR with WebP to inject compression artifacts (fallback to JPEG if unsupported)."""
+    def __init__(self, p: float = 0.5, quality: Tuple[int, int] = (30, 95)) -> None:
+        self.p = float(p)
+        self.quality = quality
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        buf = io.BytesIO()
+        q = int(random.randint(*self.quality))
+        try:
+            lr.save(buf, format="WEBP", quality=q)
+        except Exception:
+            buf.seek(0)
+            buf.truncate(0)
+            lr.save(buf, format="JPEG", quality=q)
+        buf.seek(0)
+        return Image.open(buf).convert("RGB"), hr
+
 class PairEnhance:
     """
     Apply the same color/contrast/brightness/sharpness adjustments to both LR and HR.
@@ -100,11 +221,114 @@ class PairEnhance:
         sh = self._rand(self.sharpness)
         return self._apply_factors(lr, b, c, s, sh), self._apply_factors(hr, b, c, s, sh)
 
+class PairGamma:
+    """Apply the same gamma correction to both LR and HR."""
+    def __init__(self, p: float = 0.5, gamma: Tuple[float, float] = (0.8, 1.2)) -> None:
+        self.p = float(p)
+        self.gamma = gamma
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        g = float(random.uniform(*self.gamma))
+        def apply(im: Image.Image) -> Image.Image:
+            arr = np.asarray(im).astype(np.float32) / 255.0
+            out = np.power(np.clip(arr, 0.0, 1.0), g)
+            return Image.fromarray(np.clip(out * 255.0, 0, 255).astype(np.uint8))
+        return apply(lr), apply(hr)
+
+class PairHue:
+    """Shift hue by the same amount for both LR and HR (in HSV space)."""
+    def __init__(self, p: float = 0.5, max_deg: float = 10.0) -> None:
+        self.p = float(p)
+        self.max_deg = float(max_deg)
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        # PIL HSV uses H in [0,255]; map degrees to that range
+        shift = int(round((random.uniform(-self.max_deg, self.max_deg) / 360.0) * 255.0))
+        def apply(im: Image.Image) -> Image.Image:
+            hsv = np.array(im.convert("HSV"), dtype=np.uint8)
+            h = hsv[:, :, 0].astype(np.int16)
+            h = (h + shift) % 256
+            hsv[:, :, 0] = h.astype(np.uint8)
+            return Image.fromarray(hsv, mode="HSV").convert("RGB")
+        return apply(lr), apply(hr)
+
+class PairRandomGrayscale:
+    """Randomly convert to grayscale and back for both LR and HR (paired)."""
+    def __init__(self, p: float = 0.1) -> None:
+        self.p = float(p)
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        return lr.convert("L").convert("RGB"), hr.convert("L").convert("RGB")
+
+class PairCutBlur:
+    """
+    Size-aware CutBlur: swap/copy a rectangle between LR and HR by mapping with the inferred scale.
+    This version is safe when LR and HR have different sizes.
+    """
+    def __init__(self, p: float = 0.5, frac: Tuple[float, float] = (0.125, 0.5)) -> None:
+        self.p = float(p)
+        self.frac = frac
+    def __call__(self, lr: Image.Image, hr: Image.Image):
+        if random.random() > self.p:
+            return lr, hr
+        lw, lh = lr.size; hw, hh = hr.size
+        if lw == 0 or lh == 0 or hw == 0 or hh == 0:
+            return lr, hr
+        # infer integer scale; if not divisible, skip
+        if hw % lw != 0 or hh % lh != 0:
+            return lr, hr
+        s_x, s_y = hw // lw, hh // lh
+        if s_x != s_y:
+            return lr, hr
+        s = s_x
+        # pick HR-region size as multiples of scale
+        min_w = max(s, int(hw * self.frac[0]) // s * s)
+        max_w = max(min_w, int(hw * self.frac[1]) // s * s)
+        min_h = max(s, int(hh * self.frac[0]) // s * s)
+        max_h = max(min_h, int(hh * self.frac[1]) // s * s)
+        cw = random.randrange(min_w, max_w + 1, s)
+        ch = random.randrange(min_h, max_h + 1, s)
+        if cw <= 0 or ch <= 0:
+            return lr, hr
+        x = random.randint(0, hw - cw)
+        y = random.randint(0, hh - ch)
+        lr_box = (x // s, y // s, (x + cw) // s, (y + ch) // s)
+        hr_box = (x, y, x + cw, y + ch)
+        lr2, hr2 = lr.copy(), hr.copy()
+        if random.random() < 0.5:
+            # HR -> LR (downsample HR patch and paste to LR)
+            patch_hr = hr.crop(hr_box)
+            patch_lr = patch_hr.resize((cw // s, ch // s), resample=_bicubic())
+            lr2.paste(patch_lr, lr_box)
+        else:
+            # LR -> HR (upsample LR patch and paste to HR)
+            patch_lr = lr.crop(lr_box)
+            patch_hr = patch_lr.resize((cw, ch), resample=_bicubic())
+            hr2.paste(patch_hr, hr_box)
+        return lr2, hr2
+
 # PRESET REGISTRY 
 PRESETS = {
-    "fliprot":  FlipRot(),
-    "degrade_std": DegradeStd(),
-    "pair_enhance": PairEnhance(),
+    # geometric
+    "fliprot":  FlipRot(),             # 6-way (flips + 90/180/270)
+    "fliprot8": FlipRot8(),            # full dihedral-8
+
+    # photometric (paired, size-agnostic)
+    "pair_enhance": PairEnhance(),     # brightness/contrast/saturation/sharpness
+    "pair_gamma":   PairGamma(),
+    "pair_hue":     PairHue(),
+    "pair_gray":    PairRandomGrayscale(),
+    "pair_cutblur": PairCutBlur(),     # spatial swap with proper LR<->HR mapping
+
+    # degradation (LR-only)
+    "degrade_std": DegradeStd(),       # gaussian blur + noise + jpeg
+    "lr_downup":   LRDownUp(),         # extra down-up resize
+    "lr_motion_blur": LRMotionBlur(),  # simple H/V motion blur
+    "lr_unsharp":  LRUnsharp(),        # oversharpen halos
+    "lr_webp":     LRWebP(),           # webp/jpeg artifacts
 }
 
 def build_pipeline(names: List[str]) -> Compose:
