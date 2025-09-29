@@ -117,28 +117,6 @@ class LRDownUp:
         back = small.resize((w, h), resample=random.choice(self.resamples))
         return back, hr
 
-class LRMotionBlur:
-    """Apply simple horizontal or vertical motion blur to LR only."""
-    def __init__(self, p: float = 0.5, ksize: Tuple[int, int] = (3, 15)) -> None:
-        self.p = float(p)
-        self.ksize = ksize
-    def _kernel(self, k: int, horizontal: bool) -> ImageFilter.Kernel:
-        k = max(3, int(k))
-        if k % 2 == 0: k += 1
-        arr = np.zeros((k, k), dtype=np.float32)
-        if horizontal:
-            arr[k//2, :] = 1.0
-        else:
-            arr[:, k//2] = 1.0
-        arr /= arr.sum()
-        return ImageFilter.Kernel((k, k), arr.flatten().tolist(), scale=1.0)
-    def __call__(self, lr: Image.Image, hr: Image.Image):
-        if random.random() > self.p:
-            return lr, hr
-        k = random.randint(self.ksize[0], self.ksize[1])
-        horiz = random.random() < 0.5
-        return lr.filter(self._kernel(k, horiz)), hr
-
 class LRUnsharp:
     """Apply unsharp mask on LR to simulate halos/oversharpening."""
     def __init__(self, p: float = 0.4,
@@ -160,25 +138,6 @@ class LRUnsharp:
             )),
             hr,
         )
-
-class LRWebP:
-    """Compress LR with WebP to inject compression artifacts (fallback to JPEG if unsupported)."""
-    def __init__(self, p: float = 0.5, quality: Tuple[int, int] = (30, 95)) -> None:
-        self.p = float(p)
-        self.quality = quality
-    def __call__(self, lr: Image.Image, hr: Image.Image):
-        if random.random() > self.p:
-            return lr, hr
-        buf = io.BytesIO()
-        q = int(random.randint(*self.quality))
-        try:
-            lr.save(buf, format="WEBP", quality=q)
-        except Exception:
-            buf.seek(0)
-            buf.truncate(0)
-            lr.save(buf, format="JPEG", quality=q)
-        buf.seek(0)
-        return Image.open(buf).convert("RGB"), hr
 
 class PairEnhance:
     """
@@ -326,9 +285,7 @@ PRESETS = {
     # degradation (LR-only)
     "degrade_std": DegradeStd(),       # gaussian blur + noise + jpeg
     "lr_downup":   LRDownUp(),         # extra down-up resize
-    "lr_motion_blur": LRMotionBlur(),  # simple H/V motion blur
     "lr_unsharp":  LRUnsharp(),        # oversharpen halos
-    "lr_webp":     LRWebP(),           # webp/jpeg artifacts
 }
 
 def build_pipeline(names: List[str]) -> Compose:
