@@ -180,7 +180,7 @@ class _CARAFEPre(nn.Module):
 # -------------------- registries --------------------
 SUPPORTED: Dict[str, List[str]] = {
     "pre_upsample":  ["learnable", "bicubic", "carafe"],
-    "post_upsample": ["deconvolution", "pixelshuffle", "pixelshuffle_icnr", "carafe", "meta"],
+    "post_upsample": ["deconvolution", "pixelshuffle", "pixelshuffle_icnr", "meta"],
 }
 
 # (mode, method) -> factory returning (pre_module, head_module)
@@ -188,7 +188,6 @@ HEAD_BUILDERS: Dict[Tuple[str, str], Callable[[int,int,int], Tuple[nn.Module, nn
     ("post_upsample", "pixelshuffle"):      lambda in_ch, nf, scale: (_IdentityPre(), nn.Conv2d(in_ch, nf, 3, 1, 1)),
     ("post_upsample", "deconvolution"):     lambda in_ch, nf, scale: (_IdentityPre(), nn.Conv2d(in_ch, nf, 3, 1, 1)),
     ("post_upsample", "pixelshuffle_icnr"): lambda in_ch, nf, scale: (_IdentityPre(), nn.Conv2d(in_ch, nf, 3, 1, 1)),
-    ("post_upsample", "carafe"):            lambda in_ch, nf, scale: (_IdentityPre(), nn.Conv2d(in_ch, nf, 3, 1, 1)),
     ("post_upsample", "meta"):              lambda in_ch, nf, scale: (_IdentityPre(), nn.Conv2d(in_ch, nf, 3, 1, 1)),
 
     ("pre_upsample",  "bicubic"):           lambda in_ch, nf, scale: (_BicubicPre(), nn.Conv2d(in_ch, nf, 3, 1, 1)),
@@ -201,7 +200,6 @@ TAIL_BUILDERS: Dict[Tuple[str, str], Callable[[int,int,int], nn.Module]] = {
     ("post_upsample", "pixelshuffle"):      lambda scale, nf, out_ch: _UpsamplerPixelShuffle(scale, nf, out_ch),
     ("post_upsample", "deconvolution"):     lambda scale, nf, out_ch: _UpsamplerDeconv(scale, nf, out_ch),
     ("post_upsample", "pixelshuffle_icnr"): lambda scale, nf, out_ch: _UpsamplerPixelShuffleICNR(scale, nf, out_ch),
-    ("post_upsample", "carafe"):            lambda scale, nf, out_ch: nn.Sequential(_CARAFE2d(nf, scale=scale), nn.Conv2d(nf, out_ch, 3, 1, 1)),
     ("post_upsample", "meta"):              lambda scale, nf, out_ch: _MetaUp2d(nf, scale=scale, out_ch=out_ch),
 
     ("pre_upsample",  "bicubic"):           lambda scale, nf, out_ch: nn.Conv2d(nf, out_ch, 3, 1, 1),

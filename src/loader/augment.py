@@ -146,10 +146,10 @@ class PairEnhance:
     """
     def __init__(self,
                  p: float = 0.8,
-                 brightness: Tuple[float, float] = (0.9, 1.1),
-                 contrast: Tuple[float, float] = (0.9, 1.1),
-                 saturation: Tuple[float, float] = (0.9, 1.1),
-                 sharpness: Tuple[float, float] = (0.9, 1.1)) -> None:
+                 brightness: Tuple[float, float] = (0.95, 1.05),
+                 contrast: Tuple[float, float] = (0.95, 1.05),
+                 saturation: Tuple[float, float] = (0.95, 1.05),
+                 sharpness: Tuple[float, float] = (0.95, 1.05)) -> None:
         self.p = float(p)
         self.brightness = brightness
         self.contrast = contrast
@@ -227,7 +227,7 @@ class PairCutBlur:
     Size-aware CutBlur: swap/copy a rectangle between LR and HR by mapping with the inferred scale.
     This version is safe when LR and HR have different sizes.
     """
-    def __init__(self, p: float = 0.5, frac: Tuple[float, float] = (0.125, 0.5)) -> None:
+    def __init__(self, p: float = 0.25, frac: Tuple[float, float] = (0.125, 0.5)) -> None:
         self.p = float(p)
         self.frac = frac
     def __call__(self, lr: Image.Image, hr: Image.Image):
