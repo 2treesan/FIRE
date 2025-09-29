@@ -1,7 +1,7 @@
 defaults:
   - _self_
   - loader: default
-  - model: edsr_lite
+  - model: edsr
   - trainer: default
   - eval: default
 
