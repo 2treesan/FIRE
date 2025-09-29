@@ -1,11 +1,8 @@
-# cfg/model/rcan.yaml
 _target_: src.model.rcan.RCAN
 in_ch: 3
 out_ch: 3
-nf: 64          
-nb: 10        
-ng: 10         
-scale: 2
+nf: 64
+nb: 10
+ng: 10
 res_scale: 1.0
-reduction: 16   
-
+reduction: 16

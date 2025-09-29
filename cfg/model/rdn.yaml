@@ -1,0 +1,9 @@
+_target_: src.model.rdn.RDN
+in_ch: 3
+out_ch: 3
+# Small RDN configuration (compact)
+G0: 32 # base feature channels
+D: 6 # number of Residual Dense Blocks
+C: 4 # conv layers per RDB
+G: 16 # growth rate inside RDB
+
