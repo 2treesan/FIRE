@@ -18,7 +18,7 @@ def _mod_crop(img: Image.Image, scale: int) -> Image.Image:
 
 def _hr2lr(hr: Image.Image, scale: int) -> Image.Image:
     w, h = hr.size
-    hr = hr.filter(ImageFilter.GaussianBlur(radius= 8 / scale))
+    hr = hr.filter(ImageFilter.GaussianBlur(radius=2.0))
     return hr.resize((w // scale, h // scale), resample=_bicubic())
 
 class _HROnlyDataset(Dataset):
