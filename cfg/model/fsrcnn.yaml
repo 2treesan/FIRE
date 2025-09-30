@@ -1,0 +1,10 @@
+# FSRCNN (post-upsampling) - scale được ghi đè từ loader.scale khi instantiate
+_target_: src.model.fsrcnn.FSRCNN
+in_ch: 3
+out_ch: 3
+num_feats: 56   # số channel ở feature/exapnd
+d: 12           # shrink channels
+s: 4            # mapping bottleneck channels
+m: 4            # số lớp mapping 3x3
+scale: 2
+activation: prelu
