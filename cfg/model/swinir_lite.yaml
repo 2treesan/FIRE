@@ -1,0 +1,12 @@
+# cfg/model/swinir_lite.yaml
+_target_: src.model.swinir_lite.SwinIRLite
+in_ch: 3
+out_ch: 3
+embed_dim: 64
+depths: 6
+num_heads: 4
+window_size: 8
+mlp_ratio: 2.0
+scale: 2
+resi_scale: 1.0
+
