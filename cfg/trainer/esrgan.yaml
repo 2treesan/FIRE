@@ -1,0 +1,15 @@
+_target_: src.trainer.esrgan.ESRGANTrainer
+# Trainer hyper-params
+lr_g: 1.0e-4
+lr_d: 1.0e-4
+beta1: 0.9
+beta2: 0.99
+epochs: 1
+ckpt_g: "g_best.pt"
+ckpt_d: "d_best.pt"
+# Loss weights
+w_pix: 1.0
+w_perc: 1.0
+w_gan: 0.005
+# Discriminator size
+disc_base_ch: 32
