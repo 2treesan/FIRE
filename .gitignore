@@ -5,3 +5,4 @@ __pycache__/
 bin/
 outputs/
 RUN.ipynb
+*.pptx
