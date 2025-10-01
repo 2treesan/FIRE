@@ -1,0 +1,9 @@
+_target_: src.model.kan.KANEDSR
+in_ch: 3
+out_ch: 3
+# Hybrid KAN+EDSR (compact but strong)
+nf: 64
+nb: 12
+res_scale: 0.1
+kan_bases: 8
+kan_sigma: 0.5
