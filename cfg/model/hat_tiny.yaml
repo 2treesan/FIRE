@@ -1,0 +1,20 @@
+# Tiny HAT (EDSR-style integration) - CPU-friendly defaults
+_target_: src.model.hat.HAT
+
+in_ch: 3
+out_ch: 3
+
+# network capacity (tiny)
+nf: 48
+nb: 6               # number of HAT blocks (operate in LR space)
+res_scale: 0.1
+
+# attention / transformer-like params
+num_heads: 2
+window_size: 8
+ffn_expansion: 2.0
+
+# scaling & upsampling strategy
+scale: 2
+mode: post_upsample
+method: pixelshuffle_icnr
